@@ -43,21 +43,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             _LOGGER.error(f"Error fetching data: {e}")
             raise
 
-    # Create a DataUpdateCoordinator to manage the updates
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        # Name of the data, used for logging purposes
         name="sensor",
         update_method=async_update_data,
-        # Polling interval; it will only be polled if there are subscribers
         update_interval=timedelta(seconds=30),
     )
 
-    # Fetch initial data so we have it when entities subscribe
     await coordinator.async_refresh()
 
-    # Add the Salus thermostat entities
     async_add_entities(
         SalusThermostat(coordinator, idx, gateway) 
         for idx in coordinator.data
@@ -66,11 +61,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the sensor platform."""
     pass
-
-
-
-
-
 
 class SalusThermostat(ClimateEntity):
     """Representation of a Salus Thermostat."""
@@ -91,27 +81,18 @@ class SalusThermostat(ClimateEntity):
             self._coordinator.async_add_listener(self.async_write_ha_state)
         )
 
-    #@property
-    #def supported_features(self):
-    #    """Return the list of supported features."""
-    #    return self._coordinator.data.get(self._idx).supported_features
-
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        # Start with base features like target temperature
         features = ClimateEntityFeature.TARGET_TEMPERATURE
         
-        # Add TURN_ON and TURN_OFF support if HVAC modes include off, heat, or auto
         hvac_modes = self._coordinator.data.get(self._idx).hvac_modes
         if HVACMode.OFF in hvac_modes or HVACMode.HEAT in hvac_modes or HVACMode.AUTO in hvac_modes:
             features |= ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
         
-        # Add support for presets if the device supports them
         if self.preset_modes:
             features |= ClimateEntityFeature.PRESET_MODE
         
-        # Add any other features your thermostat supports, such as FAN_MODE if applicable
         if self.fan_modes:
             features |= ClimateEntityFeature.FAN_MODE
         
