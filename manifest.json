@@ -1,0 +1,13 @@
+{
+  "domain": "salus",
+  "name": "Salus Control Smart Home",
+  "config_flow": true,
+  "documentation": "",
+  "issue_tracker": "",
+  "requirements": ["pyit600==0.5.1"],
+  "dependencies": [],
+  "codeowners": [
+    "@JRHalberg85"
+  ],
+  "version": "0.7.0"
+}
