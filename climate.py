@@ -1,20 +1,20 @@
 """Support for climate devices (thermostats)."""
 from datetime import timedelta
+
 import logging
 import async_timeout
-
 import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
+
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity, ClimateEntityFeature, HVACMode
 from homeassistant.components.climate.const import HVACMode, ClimateEntityFeature
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from .const import DOMAIN
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_HOST,
     CONF_TOKEN
 )
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-
-from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +24,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_TOKEN): cv.string,
     }
 )
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Salus thermostats from a config entry."""
