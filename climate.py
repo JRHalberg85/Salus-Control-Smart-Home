@@ -91,18 +91,36 @@ class SalusThermostat(ClimateEntity):
             self._coordinator.async_add_listener(self.async_write_ha_state)
         )
 
+    #@property
+    #def supported_features(self):
+    #    """Return the list of supported features."""
+    #    return self._coordinator.data.get(self._idx).supported_features
+
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return self._coordinator.data.get(self._idx).supported_features
+        # Start with base features like target temperature
+        features = ClimateEntityFeature.TARGET_TEMPERATURE
+        
+        # Add TURN_ON and TURN_OFF support if HVAC modes include off, heat, or auto
+        hvac_modes = self._coordinator.data.get(self._idx).hvac_modes
+        if HVACMode.OFF in hvac_modes or HVACMode.HEAT in hvac_modes or HVACMode.AUTO in hvac_modes:
+            features |= ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
+        
+        # Add support for presets if the device supports them
+        if self.preset_modes:
+            features |= ClimateEntityFeature.PRESET_MODE
+        
+        # Add any other features your thermostat supports, such as FAN_MODE if applicable
+        if self.fan_modes:
+            features |= ClimateEntityFeature.FAN_MODE
+        
+        return features
 
     @property
     def available(self):
         """Return if entity is available."""
         return self._coordinator.data.get(self._idx).available
-    
-    
-    
     
     @property
     def icon(self):
