@@ -2,7 +2,7 @@
   "domain": "salus",
   "name": "Salus Control Smart Home",
   "config_flow": true,
-  "documentation": "",
+  "documentation": "https://github.com/JRHalberg85/Salus-Control-Smart-Home",
   "issue_tracker": "",
   "requirements": ["pyit600==0.5.1"],
   "dependencies": [],
