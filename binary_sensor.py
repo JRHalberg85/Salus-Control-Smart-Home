@@ -1,4 +1,4 @@
-"""Support for binary (door/window/smoke/leak) sensors."""
+"""Binary sensors for Salus Control Smart Home"""
 
 from datetime import timedelta
 import logging
