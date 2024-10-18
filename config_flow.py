@@ -1,11 +1,14 @@
 """Config flow to configure Salus iT600 component."""
 import logging
+
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
+
 from pyit600.exceptions import IT600AuthenticationError, IT600ConnectionError
 from pyit600.gateway import IT600Gateway
+
 from .const import DOMAIN, CONF_FLOW_TYPE, CONF_USER, DEFAULT_GATEWAY_NAME
 
 _LOGGER = logging.getLogger(__name__)
@@ -15,6 +18,7 @@ GATEWAY_SETTINGS = {
     vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=16, max=16)),
     vol.Optional(CONF_NAME, default=DEFAULT_GATEWAY_NAME): str,
 }
+
 
 class SalusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Salus config flow."""

@@ -1,20 +1,21 @@
 """Support for climate devices (thermostats)."""
-from datetime import timedelta
 
+from datetime import timedelta
 import logging
 import async_timeout
-import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
+import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity, ClimateEntityFeature, HVACMode
 from homeassistant.components.climate.const import HVACMode, ClimateEntityFeature
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from .const import DOMAIN
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_HOST,
     CONF_TOKEN
 )
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,6 +26,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Salus thermostats from a config entry."""
 
@@ -33,7 +35,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async def async_update_data():
         """Fetch data from the API endpoint and update climate devices."""
         try:
-            async with async_timeout.timeout(30):
+            async with async_timeout.timeout(10):
                 await gateway.poll_status()
                 devices = gateway.get_climate_devices()
                 _LOGGER.debug(f"Devices fetched: {devices}")
@@ -42,16 +44,21 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             _LOGGER.error(f"Error fetching data: {e}")
             raise
 
+    # Create a DataUpdateCoordinator to manage the updates
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        # Name of the data, used for logging purposes
         name="sensor",
         update_method=async_update_data,
-        update_interval=timedelta(seconds=30),
+        # Polling interval; it will only be polled if there are subscribers
+        update_interval=timedelta(seconds=10),
     )
 
+    # Fetch initial data so we have it when entities subscribe
     await coordinator.async_refresh()
 
+    # Add the Salus thermostat entities
     async_add_entities(
         SalusThermostat(coordinator, idx, gateway) 
         for idx in coordinator.data
@@ -61,6 +68,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the sensor platform."""
     pass
 
+
+
+
+
+
 class SalusThermostat(ClimateEntity):
     """Representation of a Salus Thermostat."""
 
@@ -69,6 +81,7 @@ class SalusThermostat(ClimateEntity):
         self._coordinator = coordinator
         self._idx = idx
         self._gateway = gateway
+        self._device = self._coordinator.data.get(self._idx)
 
     async def async_update(self):
         """Update the entity."""
@@ -84,17 +97,13 @@ class SalusThermostat(ClimateEntity):
     def supported_features(self):
         """Return the list of supported features."""
         features = ClimateEntityFeature.TARGET_TEMPERATURE
-        
         hvac_modes = self._coordinator.data.get(self._idx).hvac_modes
         if HVACMode.OFF in hvac_modes or HVACMode.HEAT in hvac_modes or HVACMode.AUTO in hvac_modes:
             features |= ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
-        
         if self.preset_modes:
             features |= ClimateEntityFeature.PRESET_MODE
-        
         if self.fan_modes:
             features |= ClimateEntityFeature.FAN_MODE
-        
         return features
 
     @property
@@ -161,8 +170,8 @@ class SalusThermostat(ClimateEntity):
 
     @property
     def hvac_modes(self):
-        """Return the list of available operation modes."""
-        return self._coordinator.data.get(self._idx).hvac_modes
+        """Return the list of available HVAC operation modes."""
+        return self._device.hvac_modes
 
     @property
     def hvac_action(self):
@@ -188,7 +197,8 @@ class SalusThermostat(ClimateEntity):
 
     @property
     def preset_modes(self):
-        return self._coordinator.data.get(self._idx).preset_modes
+        """Return the list of available preset modes."""
+        return self._device.preset_modes
 
     @property
     def fan_mode(self):
@@ -196,31 +206,32 @@ class SalusThermostat(ClimateEntity):
 
     @property
     def fan_modes(self):
-        return self._coordinator.data.get(self._idx).fan_modes
+        """Return the list of available fan modes."""
+        return self._device.fan_modes
 
     @property
     def locked(self):
         return self._coordinator.data.get(self._idx).locked
 
+
+
     async def async_set_temperature(self, **kwargs):
         """Set a new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
-            return
-        await self._gateway.set_climate_device_temperature(self._device, temperature)
-        await self._coordinator.async_request_refresh()
-
-    async def async_set_fan_mode(self, fan_mode):
-        """Set fan mode (auto, low, medium, high, off)."""
-        await self._gateway.set_climate_device_fan_mode(self._device, fan_mode)
-        await self._coordinator.async_request_refresh()
-
-    async def async_set_hvac_mode(self, hvac_mode):
-        """Set the HVAC mode (auto, heat, cool)."""
-        await self._gateway.set_climate_device_mode(self._device, hvac_mode)
+        await self._gateway.set_climate_device_temperature(self._idx, temperature)
         await self._coordinator.async_request_refresh()
 
     async def async_set_preset_mode(self, preset_mode):
         """Set the preset mode."""
-        await self._gateway.set_climate_device_preset(self._device, preset_mode)
+        await self._gateway.set_climate_device_preset(self._idx, preset_mode)
+        await self._coordinator.async_request_refresh()
+
+    async def async_set_hvac_mode(self, hvac_mode):
+        """Set the HVAC mode (off, heat, auto)."""
+        await self._gateway.set_climate_device_mode(self._idx, hvac_mode)
+        await self._coordinator.async_request_refresh()
+        
+    async def async_set_fan_mode(self, fan_mode):
+        """Set the fan mode (auto, low, medium, high, off)."""
+        await self._gateway.set_climate_device_fan_mode(self._idx, fan_mode)
         await self._coordinator.async_request_refresh()

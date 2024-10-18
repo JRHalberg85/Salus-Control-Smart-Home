@@ -1,10 +1,11 @@
 """Support for Salus iT600."""
 import logging
 import time
-
 from asyncio import sleep
+
 from homeassistant import config_entries, core
 from homeassistant.helpers import device_registry as dr
+
 from homeassistant.const import (
     CONF_HOST,
     CONF_TOKEN
@@ -12,6 +13,7 @@ from homeassistant.const import (
 
 from pyit600.exceptions import IT600AuthenticationError, IT600ConnectionError
 from pyit600.gateway import IT600Gateway
+
 from .config_flow import CONF_FLOW_TYPE, CONF_USER
 from .const import DOMAIN
 
@@ -19,9 +21,11 @@ _LOGGER = logging.getLogger(__name__)
 
 GATEWAY_PLATFORMS = ["climate", "binary_sensor"] #, "switch", "cover", "sensor"
 
+
 async def async_setup(hass: core.HomeAssistant, config: dict) -> bool:
     """Set up the Salus iT600 component."""
     return True
+
 
 async def async_setup_entry(hass: core.HomeAssistant, entry: config_entries.ConfigEntry) -> bool:
     """Set up components from a config entry."""
