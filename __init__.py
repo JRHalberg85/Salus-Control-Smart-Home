@@ -1,4 +1,4 @@
-"""Support for Salus iT600."""
+"""Support for Salus Control Smart Home"""
 import logging
 import time
 from asyncio import sleep
