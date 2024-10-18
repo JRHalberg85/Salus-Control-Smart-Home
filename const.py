@@ -1,4 +1,4 @@
-"""Constants of the Salus iT600 component."""
+"""Constants for Salus Control Smart Home"""
 
 DOMAIN = "salus"
 
