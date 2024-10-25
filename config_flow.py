@@ -1,4 +1,4 @@
-"""Config flow for Salus Control Smart Home integration"""
+"""Config flow to configure Salus iT600 component."""
 import logging
 
 import voluptuous as vol

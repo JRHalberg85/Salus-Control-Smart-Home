@@ -1,8 +1,9 @@
-"""Binary sensors for Salus Control Smart Home"""
+"""Support for binary (door/window/smoke/leak) sensors."""
 
 from datetime import timedelta
 import logging
 import async_timeout
+import asyncio
 
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv

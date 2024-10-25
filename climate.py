@@ -1,4 +1,4 @@
-"""Climate entities for Salus Control Smart Home"""
+"""Support for climate devices (thermostats)."""
 
 from datetime import timedelta
 import logging
