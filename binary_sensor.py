@@ -29,7 +29,7 @@ async def async_update_data(gateway):
     retries = 3
     for attempt in range(retries):
         try:
-            async with async_timeout.timeout(10):
+            async with async_timeout.timeout(15):
                 await gateway.poll_status()
                 devices = gateway.get_binary_sensor_devices()
                 _LOGGER.debug(f"Devices fetched: {devices}")
@@ -68,7 +68,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         _LOGGER,
         name="sensor",
         update_method=lambda: async_update_data(gateway),  
-        update_interval=timedelta(seconds=10),
+        update_interval=timedelta(seconds=15),
     )
 
     await coordinator.async_refresh()

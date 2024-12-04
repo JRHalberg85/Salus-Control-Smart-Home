@@ -47,18 +47,35 @@ async def async_setup_gateway_entry(hass: core.HomeAssistant, entry: config_entr
         for remaining_attempts in reversed(range(3)):
             try:
                 await gateway.connect()
+                
+                # Tilføj logik til poll_status
+                import time
+                start_time = time.time()
                 await gateway.poll_status()
+                _LOGGER.info(f"Polling completed in {time.time() - start_time} seconds")
+                break
             except Exception as e:
                 if remaining_attempts == 0:
+                    _LOGGER.error(f"Connection failed after {time.time() - start_time} seconds: {e}")
                     raise e
                 else:
+                    _LOGGER.warning(f"Retrying connection ({3 - remaining_attempts}/3)...")
                     await sleep(3)
-    except IT600ConnectionError as ce:
+    except IT600ConnectionError:
         _LOGGER.error("Connection error: check if you have specified gateway's HOST correctly.")
         return False
-    except IT600AuthenticationError as ae:
+    except IT600AuthenticationError:
         _LOGGER.error("Authentication error: check if you have specified gateway's EUID correctly.")
         return False
+
+    # Brug poll_status som indikator for forbindelsen
+    try:
+        await gateway.poll_status()
+        _LOGGER.info("Gateway connected successfully.")
+    except IT600ConnectionError:
+        _LOGGER.warning("Gateway not connected. Integration set up in limited mode.")
+        hass.data[DOMAIN][entry.entry_id] = None
+        return True
 
     hass.data[DOMAIN][entry.entry_id] = gateway
 

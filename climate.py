@@ -35,7 +35,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async def async_update_data():
         """Fetch data from the API endpoint and update climate devices."""
         try:
-            async with async_timeout.timeout(10):
+            async with async_timeout.timeout(15):
                 await gateway.poll_status()
                 devices = gateway.get_climate_devices()
                 _LOGGER.debug(f"Devices fetched: {devices}")
@@ -48,17 +48,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        # Name of the data, used for logging purposes
         name="sensor",
         update_method=async_update_data,
-        # Polling interval; it will only be polled if there are subscribers
-        update_interval=timedelta(seconds=10),
+        update_interval=timedelta(seconds=15),
     )
 
     # Fetch initial data so we have it when entities subscribe
     await coordinator.async_refresh()
 
-    # Add the Salus thermostat entities
+    # Check if coordinator.data is None or empty
+    if not coordinator.data:
+        _LOGGER.error("No devices found to add.")
+        return
+
+    # Add the Salus thermostat entities if devices are present
     async_add_entities(
         SalusThermostat(coordinator, idx, gateway) 
         for idx in coordinator.data
@@ -67,11 +70,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the sensor platform."""
     pass
-
-
-
-
-
 
 class SalusThermostat(ClimateEntity):
     """Representation of a Salus Thermostat."""
